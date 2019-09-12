@@ -5,3 +5,5 @@ Team Members:
  - Granger, Bruce
  - Houssaye de la, Brandon
  - Serna, Daniel
+
+Objective: Scrape data from http://cherryblossom.org/
