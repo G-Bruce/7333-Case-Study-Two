@@ -164,9 +164,9 @@ df <- extractResTable(url = "http://www.cherryblossom.org/results/2000/Cb003m.ht
 
 #### Textbook extraction of Male tables (results in an error)
 years = 1999:2012
-menTables = mapply(extractResTable, url = urls, year = years)
-names(menTables) = years
-sapply(menTables, length)
+#menTables = mapply(extractResTable, url = urls, year = years)
+#names(menTables) = years
+#sapply(menTables, length)
 
 urls[1]
 urlsV2[1]
@@ -190,5 +190,5 @@ menTablesV2$'1999'[1:10]
 menTablesV2[[2]][1:10]
 
 #### Save the outputs
-save(menTablesV2, file = "CBMenTextTables.rda")
+save(menTablesV2, file = "CBMenTextTables_Serna.rda")
 ```
