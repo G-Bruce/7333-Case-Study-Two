@@ -133,21 +133,21 @@ $(document).ready(function () {
 ubase = &quot;http://www.cherryblossom.org/&quot;
 
 #### From text
-menURLs = 
-  c(&quot;cb99m.htm&quot;, 
-    &quot;cb003m.htm&quot;, 
-    &quot;results/2001/oof_m.html&quot;,
-    &quot;results/2002/oofm.htm&quot;, 
-    &quot;results/2003/CB03-M.HTM&quot;,
-    &quot;results/2004/men.htm&quot;, 
-    &quot;results/2005/CB05-M.htm&quot;, 
-    &quot;results/2006/men.htm&quot;, 
-    &quot;results/2007/men.htm&quot;, 
-    &quot;results/2008/men.htm&quot;, 
-    &quot;results/2009/09cucb-M.htm&quot;,
-    &quot;results/2010/2010cucb10m-m.htm&quot;, 
-    &quot;results/2011/2011cucb10m-m.htm&quot;,
-    &quot;results/2012/2012cucb10m-m.htm&quot;)
+# menURLs = 
+#   c(&quot;cb99m.htm&quot;, 
+#     &quot;cb003m.htm&quot;, 
+#     &quot;results/2001/oof_m.html&quot;,
+#     &quot;results/2002/oofm.htm&quot;, 
+#     &quot;results/2003/CB03-M.HTM&quot;,
+#     &quot;results/2004/men.htm&quot;, 
+#     &quot;results/2005/CB05-M.htm&quot;, 
+#     &quot;results/2006/men.htm&quot;, 
+#     &quot;results/2007/men.htm&quot;, 
+#     &quot;results/2008/men.htm&quot;, 
+#     &quot;results/2009/09cucb-M.htm&quot;,
+#     &quot;results/2010/2010cucb10m-m.htm&quot;, 
+#     &quot;results/2011/2011cucb10m-m.htm&quot;,
+#     &quot;results/2012/2012cucb10m-m.htm&quot;)
 ####
 
 #### Revised URLS
@@ -170,57 +170,54 @@ menURLsV2 =
 ####
 
 #### Text URLS
-urls = paste(ubase, menURLs, sep=&quot;&quot;)
-urls[1:4]</code></pre>
-<pre><code>## [1] &quot;http://www.cherryblossom.org/cb99m.htm&quot;              
-## [2] &quot;http://www.cherryblossom.org/cb003m.htm&quot;             
-## [3] &quot;http://www.cherryblossom.org/results/2001/oof_m.html&quot;
-## [4] &quot;http://www.cherryblossom.org/results/2002/oofm.htm&quot;</code></pre>
-<pre class="r"><code>#### Revised URLS
+# urls = paste(ubase, menURLs, sep=&quot;&quot;)
+# urls[1:4]
+
+#### Revised URLS
 urlsV2 = paste(ubase, menURLsV2, sep=&quot;&quot;)
 urlsV2[1:4]</code></pre>
 <pre><code>## [1] &quot;http://www.cherryblossom.org/results/1999/cb99m.html&quot;
 ## [2] &quot;http://www.cherryblossom.org/results/2000/Cb003m.htm&quot;
 ## [3] &quot;http://www.cherryblossom.org/results/2001/oof_m.html&quot;
 ## [4] &quot;http://www.cherryblossom.org/results/2002/oofm.htm&quot;</code></pre>
-<pre class="r"><code>extractResTable =
-  #
-  # Retrieve data from web site, 
-  # find the preformatted text,
-  # and write lines or return as a character vector.
-  #
-  function(url = &quot;http://www.cherryblossom.org/results/2009/09cucb-F.htm&quot;,
-           year = 1999, sex = &quot;male&quot;, file = NULL)
-  {
-    #added encoding for windows users who get an &quot;A&quot; symbol
-    doc = htmlParse(url)    
-    #doc = htmlParse(url, encoding=&quot;UTF-8&quot;)
-    
-    if (year == 2000) {
-      # Get preformatted text from 4th font element
-      # The top file is ill formed so the &lt;pre&gt; search doesn't work.
-      ff = getNodeSet(doc, &quot;//font&quot;)
-      txt = xmlValue(ff[[4]])
-      els = strsplit(txt, &quot;\r\n&quot;)[[1]]
-    }
-    else if (year == 2009 &amp; sex == &quot;male&quot;) {
-      # Get preformatted text from &lt;div class=&quot;Section1&quot;&gt; element
-      # Each line of results is in a &lt;pre&gt; element
-      div1 = getNodeSet(doc, &quot;//div[@class='Section1']&quot;)
-      pres = getNodeSet(div1[[1]], &quot;//pre&quot;)
-      els = sapply(pres, xmlValue)
-    }
-    else {
-      # Get preformatted text from &lt;pre&gt; elements
-      pres = getNodeSet(doc, &quot;//pre&quot;)
-      txt = xmlValue(pres[[1]])
-      els = strsplit(txt, &quot;\r\n&quot;)[[1]]   
-    } 
-    
-    if (is.null(file)) return(els)
-    # Write the lines as a text file.
-    writeLines(els, con = file)
-  }
+<pre class="r"><code># extractResTable =
+#   #
+#   # Retrieve data from web site, 
+#   # find the preformatted text,
+#   # and write lines or return as a character vector.
+#   #
+#   function(url = &quot;http://www.cherryblossom.org/results/2009/09cucb-F.htm&quot;,
+#            year = 1999, sex = &quot;male&quot;, file = NULL)
+#   {
+#     #added encoding for windows users who get an &quot;A&quot; symbol
+#     doc = htmlParse(url)    
+#     #doc = htmlParse(url, encoding=&quot;UTF-8&quot;)
+#     
+#     if (year == 2000) {
+#       # Get preformatted text from 4th font element
+#       # The top file is ill formed so the &lt;pre&gt; search doesn't work.
+#       ff = getNodeSet(doc, &quot;//font&quot;)
+#       txt = xmlValue(ff[[4]])
+#       els = strsplit(txt, &quot;\r\n&quot;)[[1]]
+#     }
+#     else if (year == 2009 &amp; sex == &quot;male&quot;) {
+#       # Get preformatted text from &lt;div class=&quot;Section1&quot;&gt; element
+#       # Each line of results is in a &lt;pre&gt; element
+#       div1 = getNodeSet(doc, &quot;//div[@class='Section1']&quot;)
+#       pres = getNodeSet(div1[[1]], &quot;//pre&quot;)
+#       els = sapply(pres, xmlValue)
+#     }
+#     else {
+#       # Get preformatted text from &lt;pre&gt; elements
+#       pres = getNodeSet(doc, &quot;//pre&quot;)
+#       txt = xmlValue(pres[[1]])
+#       els = strsplit(txt, &quot;\r\n&quot;)[[1]]   
+#     } 
+#     
+#     if (is.null(file)) return(els)
+#     # Write the lines as a text file.
+#     writeLines(els, con = file)
+#   }
 
 #### Revised Function
 extractResTableV2 =
@@ -277,7 +274,7 @@ extractResTableV2 =
 ####
 
 #### Textbook example with (1) URL
-df &lt;- extractResTable(url = &quot;http://www.cherryblossom.org/results/2000/Cb003m.htm&quot;, year = 2000, sex = &quot;male&quot;, file = NULL)
+# df &lt;- extractResTable(url = &quot;http://www.cherryblossom.org/results/2000/Cb003m.htm&quot;, year = 2000, sex = &quot;male&quot;, file = NULL)
 
 #### Textbook extraction of Male tables (results in an error)
 years = 1999:2012
@@ -285,31 +282,19 @@ years = 1999:2012
 #names(menTables) = years
 #sapply(menTables, length)
 
-urls[1]</code></pre>
-<pre><code>## [1] &quot;http://www.cherryblossom.org/cb99m.htm&quot;</code></pre>
-<pre class="r"><code>urlsV2[1]</code></pre>
+# urls[1]
+urlsV2[1]</code></pre>
 <pre><code>## [1] &quot;http://www.cherryblossom.org/results/1999/cb99m.html&quot;</code></pre>
 <pre class="r"><code>#### Modified textbook extraction of Male tables (results in 1999 having (1) record)
-menTables = mapply(extractResTable, url = urlsV2, year = years)
-names(menTables) = years
-sapply(menTables, length)</code></pre>
-<pre><code>## 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 
-##    1 3019 3627 3727 3951 4164 4335 5245 5283 5913 6659 6919 7019 7201</code></pre>
-<pre class="r"><code>#### Code to compare and contrast the format of two different years
-substr(menTables$'1999', start = 1, stop = 100)</code></pre>
-<pre><code>## [1] &quot;\nPLACE DIV /TOT  NAME                  AG HOMETOWN           TIME    PACE  \n===== ========= ========&quot;</code></pre>
-<pre class="r"><code>menTables$'2000'[1:10]</code></pre>
-<pre><code>##  [1] &quot;PLACE DIV /TOT  NUM   NAME                  AG HOMETOWN           GUN TIM  NET TIM &quot;
-##  [2] &quot;===== ========= ===== ===================== == ================== =======  ======= &quot;
-##  [3] &quot;    1    1/1503    12 Reuben Cheruiyot      26 Kenya                46:07#   46:06 &quot;
-##  [4] &quot;    2    2/1503     4 Joseph Kimani         27 Kenya                46:10#   46:08 &quot;
-##  [5] &quot;    3    3/1503    34 John Korir            24 Kenya                46:19#   46:19 &quot;
-##  [6] &quot;    4    4/1503     5 Domenic Kirui         32 Kenya                46:21#   46:19 &quot;
-##  [7] &quot;    5    5/1503    33 Joshua Chelanga       26 Kenya                46:25#   46:24 &quot;
-##  [8] &quot;    6    6/1503     9 David Makori          26 Kenya                46:57#   46:56 &quot;
-##  [9] &quot;    7    7/1503    10 Philip Kurui          26 Kenya                47:31#   47:31 &quot;
-## [10] &quot;    8    8/1503    30 Felix Limo            19 Kenya                47:31#   47:31 &quot;</code></pre>
-<pre class="r"><code>#### Corrected function to pull down Male tables with consistent format
+# menTables = mapply(extractResTable, url = urlsV2, year = years)
+# names(menTables) = years
+# sapply(menTables, length)
+
+#### Code to compare and contrast the format of two different years
+# substr(menTables$'1999', start = 1, stop = 100)
+# menTables$'2000'[1:10]
+
+#### Corrected function to pull down Male tables with consistent format
 menTablesV2 = mapply(extractResTableV2, url = urlsV2, year = years)
 names(menTablesV2) = years
 sapply(menTablesV2, length)</code></pre>
