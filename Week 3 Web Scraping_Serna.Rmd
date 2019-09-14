@@ -12,8 +12,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 Intro
-```{r createUrls}
+```{r libraries}
 library(XML)
+library(dplyr)
+```
+
+```{r createUrls}
+
 ubase = "http://www.cherryblossom.org/"
 
 #### Revised URLS
@@ -203,4 +208,6 @@ menDF = mapply(createDF, menResMat, year = 1999:2012,
                sex = rep("M", 14), SIMPLIFY = FALSE)
 length(menDF)
 sapply(menDF, nrow)
+cbMen = do.call(rbind, menDF)
+
 ```

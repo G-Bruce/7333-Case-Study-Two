@@ -130,7 +130,16 @@ $(document).ready(function () {
 <h2>R Markdown</h2>
 <p>Intro</p>
 <pre class="r"><code>library(XML)
-ubase = &quot;http://www.cherryblossom.org/&quot;
+library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>ubase = &quot;http://www.cherryblossom.org/&quot;
 
 #### Revised URLS
 menURLsV2 = 
@@ -339,6 +348,7 @@ menDF = mapply(createDF, menResMat, year = 1999:2012,
 <pre class="r"><code>sapply(menDF, nrow)</code></pre>
 <pre><code>## 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 
 ## 3190 3016 3561 3723 3946 4156 4324 5235 5252 5905 6649 6909 7011 7193</code></pre>
+<pre class="r"><code>cbMen = do.call(rbind, menDF)</code></pre>
 </div>
 
 
