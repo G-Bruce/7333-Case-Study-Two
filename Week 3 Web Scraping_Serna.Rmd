@@ -146,6 +146,61 @@ extractResTableV2 =
     # Write the lines as a text file.
     writeLines(els, con = file)
   }
+
+extractVariables = 
+function(file, varNames =c("name", "home", "ag", "gun",
+                           "net", "time"))
+{
+  
+  # Find the index of the row with =s
+  eqIndex = grep("^===", file)
+  # Extract the two key rows and the data 
+  spacerRow = file[eqIndex] 
+  headerRow = tolower(file[ eqIndex - 1 ])
+  body = file[ -(1 : eqIndex) ]
+       # Remove footnotes and blank rows
+  footnotes = grep("^[[:blank:]]*(\\*|\\#)", body)
+  if ( length(footnotes) > 0 ) body = body[ -footnotes ]
+  blanks = grep("^[[:blank:]]*$", body)
+  if (length(blanks) > 0 ) body = body[ -blanks ]
+  
+  
+  # Obtain the starting and ending positions of variables   
+  searchLocs = findColLocs(spacerRow)
+  locCols = selectCols(varNames, headerRow, searchLocs)
+  
+  Values = mapply(substr, list(body), start = locCols[1, ], 
+                  stop = locCols[2, ])
+  colnames(Values) = varNames
+  
+  return(Values)
+}
+
+findColLocs = function(spacerRow) {
+
+  spaceLocs = gregexpr(" ", spacerRow)[[1]]
+  rowLength = nchar(spacerRow)
+
+  if (substring(spacerRow, rowLength, rowLength) != " ")
+    return( c(0, spaceLocs, rowLength + 1))
+  else return(c(0, spaceLocs))
+}
+
+selectCols = 
+function(colNames, headerRow, searchLocs) 
+{
+  sapply(colNames, 
+         function(name, headerRow, searchLocs)
+         {
+           startPos = regexpr(name, headerRow)[[1]]
+           if (startPos == -1) 
+             return( c(NA, NA) )
+    
+           index = sum(startPos >= searchLocs)
+           c(searchLocs[index] + 1, searchLocs[index + 1] - 1)
+         },
+         headerRow = headerRow, searchLocs = searchLocs )
+}
 ```
 
 ```{r retrieveData}
@@ -191,4 +246,10 @@ menTablesV2[[2]][1:10]
 
 #### Save the outputs
 save(menTablesV2, file = "CBMenTextTables_Serna.rda")
+```
+
+```{r parseData}
+menResMat = lapply(menTablesV2, extractVariables)
+length(menResMat)
+sapply(menResMat, nrow)
 ```

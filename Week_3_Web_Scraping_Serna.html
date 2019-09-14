@@ -262,7 +262,62 @@ extractResTableV2 =
     if (is.null(file)) return(els)
     # Write the lines as a text file.
     writeLines(els, con = file)
-  }</code></pre>
+  }
+
+extractVariables = 
+function(file, varNames =c(&quot;name&quot;, &quot;home&quot;, &quot;ag&quot;, &quot;gun&quot;,
+                           &quot;net&quot;, &quot;time&quot;))
+{
+  
+  # Find the index of the row with =s
+  eqIndex = grep(&quot;^===&quot;, file)
+  # Extract the two key rows and the data 
+  spacerRow = file[eqIndex] 
+  headerRow = tolower(file[ eqIndex - 1 ])
+  body = file[ -(1 : eqIndex) ]
+       # Remove footnotes and blank rows
+  footnotes = grep(&quot;^[[:blank:]]*(\\*|\\#)&quot;, body)
+  if ( length(footnotes) &gt; 0 ) body = body[ -footnotes ]
+  blanks = grep(&quot;^[[:blank:]]*$&quot;, body)
+  if (length(blanks) &gt; 0 ) body = body[ -blanks ]
+  
+  
+  # Obtain the starting and ending positions of variables   
+  searchLocs = findColLocs(spacerRow)
+  locCols = selectCols(varNames, headerRow, searchLocs)
+  
+  Values = mapply(substr, list(body), start = locCols[1, ], 
+                  stop = locCols[2, ])
+  colnames(Values) = varNames
+  
+  return(Values)
+}
+
+findColLocs = function(spacerRow) {
+
+  spaceLocs = gregexpr(&quot; &quot;, spacerRow)[[1]]
+  rowLength = nchar(spacerRow)
+
+  if (substring(spacerRow, rowLength, rowLength) != &quot; &quot;)
+    return( c(0, spaceLocs, rowLength + 1))
+  else return(c(0, spaceLocs))
+}
+
+selectCols = 
+function(colNames, headerRow, searchLocs) 
+{
+  sapply(colNames, 
+         function(name, headerRow, searchLocs)
+         {
+           startPos = regexpr(name, headerRow)[[1]]
+           if (startPos == -1) 
+             return( c(NA, NA) )
+    
+           index = sum(startPos &gt;= searchLocs)
+           c(searchLocs[index] + 1, searchLocs[index + 1] - 1)
+         },
+         headerRow = headerRow, searchLocs = searchLocs )
+}</code></pre>
 <pre class="r"><code>#### Textbook Function
 
 
@@ -325,6 +380,12 @@ menTablesV2$'1999'[1:10]</code></pre>
 ## [10] &quot;    8    8/1503    30 Felix Limo            19 Kenya                47:31#   47:31 &quot;</code></pre>
 <pre class="r"><code>#### Save the outputs
 save(menTablesV2, file = &quot;CBMenTextTables_Serna.rda&quot;)</code></pre>
+<pre class="r"><code>menResMat = lapply(menTablesV2, extractVariables)
+length(menResMat)</code></pre>
+<pre><code>## [1] 14</code></pre>
+<pre class="r"><code>sapply(menResMat, nrow)</code></pre>
+<pre><code>## 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 
+## 3190 3016 3561 3723 3946 4156 4324 5235 5274 5905 6649 6909 7011 7193</code></pre>
 </div>
 
 
