@@ -124,20 +124,46 @@ findColLocs = function(spacerRow) {
   else return(c(0, spaceLocs))
 }
 
-selectCols = 
-function(colNames, headerRow, searchLocs) 
+selectCols = function(shortColNames, headerRow, searchLocs) {
+  sapply(shortColNames, function(shortName, headerRow, searchLocs){
+    startPos = regexpr(shortName, headerRow)[[1]]
+    if (startPos == -1) return( c(NA, NA) )
+    index = sum(startPos >= searchLocs)
+    c(searchLocs[index] + 1, searchLocs[index + 1])
+  }, headerRow = headerRow, searchLocs = searchLocs )
+}
+
+convertTime = function(time) {
+  timePieces = strsplit(time, ":")
+  timePieces = sapply(timePieces, as.numeric)
+  sapply(timePieces, function(x) {
+                      if (length(x) == 2) x[1] + x[2]/60
+                      else 60*x[1] + x[2] + x[3]/60
+                      })
+}
+
+
+createDF = function(Res, year, sex) 
 {
-  sapply(colNames, 
-         function(name, headerRow, searchLocs)
-         {
-           startPos = regexpr(name, headerRow)[[1]]
-           if (startPos == -1) 
-             return( c(NA, NA) )
-    
-           index = sum(startPos >= searchLocs)
-           c(searchLocs[index] + 1, searchLocs[index + 1] - 1)
-         },
-         headerRow = headerRow, searchLocs = searchLocs )
+  # Determine which time to use
+  if ( !is.na(Res[1, 'net']) ) useTime = Res[ , 'net']
+  else if ( !is.na(Res[1, 'gun']) ) useTime = Res[ , 'gun']
+  else useTime = Res[ , 'time']
+  
+  # Remove # and * and blanks from time
+  useTime = gsub("[#\\*[:blank:]]", "", useTime)
+  runTime = convertTime(useTime[ useTime != "" ])
+  
+  # Drop rows with no time
+  Res = Res[ useTime != "", ]
+  
+  Results = data.frame(year = rep(year, nrow(Res)),
+                       sex = rep(sex, nrow(Res)),
+                       name = Res[ , 'name'], home = Res[ , 'home'],
+                       age = as.numeric(Res[, 'ag']), 
+                       runTime = runTime,
+                       stringsAsFactors = FALSE)
+  invisible(Results)
 }
 ```
 
@@ -161,7 +187,20 @@ save(menTablesV2, file = "CBMenTextTables_Serna.rda")
 ```
 
 ```{r parseData}
-menResMat = lapply(menTablesV2, extractVariables)
-length(menResMat)
-sapply(menResMat, nrow)
+# menResMat = lapply(menTablesV2, extractVariables)
+# length(menResMat)
+# sapply(menResMat, nrow)
+
+separatorIdx = grep("^===", menTablesV2[["2006"]])
+separatorRow = menTablesV2[['2006']][separatorIdx]
+separatorRowX = paste(substring(separatorRow, 1, 63), " ", 
+                      substring(separatorRow, 65, nchar(separatorRow)), 
+                      sep = "")
+menTablesV2[['2006']][separatorIdx] = separatorRowX
+
+menResMat = sapply(menTablesV2, extractVariables)
+menDF = mapply(createDF, menResMat, year = 1999:2012,
+               sex = rep("M", 14), SIMPLIFY = FALSE)
+length(menDF)
+sapply(menDF, nrow)
 ```

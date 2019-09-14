@@ -241,20 +241,46 @@ findColLocs = function(spacerRow) {
   else return(c(0, spaceLocs))
 }
 
-selectCols = 
-function(colNames, headerRow, searchLocs) 
+selectCols = function(shortColNames, headerRow, searchLocs) {
+  sapply(shortColNames, function(shortName, headerRow, searchLocs){
+    startPos = regexpr(shortName, headerRow)[[1]]
+    if (startPos == -1) return( c(NA, NA) )
+    index = sum(startPos &gt;= searchLocs)
+    c(searchLocs[index] + 1, searchLocs[index + 1])
+  }, headerRow = headerRow, searchLocs = searchLocs )
+}
+
+convertTime = function(time) {
+  timePieces = strsplit(time, &quot;:&quot;)
+  timePieces = sapply(timePieces, as.numeric)
+  sapply(timePieces, function(x) {
+                      if (length(x) == 2) x[1] + x[2]/60
+                      else 60*x[1] + x[2] + x[3]/60
+                      })
+}
+
+
+createDF = function(Res, year, sex) 
 {
-  sapply(colNames, 
-         function(name, headerRow, searchLocs)
-         {
-           startPos = regexpr(name, headerRow)[[1]]
-           if (startPos == -1) 
-             return( c(NA, NA) )
-    
-           index = sum(startPos &gt;= searchLocs)
-           c(searchLocs[index] + 1, searchLocs[index + 1] - 1)
-         },
-         headerRow = headerRow, searchLocs = searchLocs )
+  # Determine which time to use
+  if ( !is.na(Res[1, 'net']) ) useTime = Res[ , 'net']
+  else if ( !is.na(Res[1, 'gun']) ) useTime = Res[ , 'gun']
+  else useTime = Res[ , 'time']
+  
+  # Remove # and * and blanks from time
+  useTime = gsub(&quot;[#\\*[:blank:]]&quot;, &quot;&quot;, useTime)
+  runTime = convertTime(useTime[ useTime != &quot;&quot; ])
+  
+  # Drop rows with no time
+  Res = Res[ useTime != &quot;&quot;, ]
+  
+  Results = data.frame(year = rep(year, nrow(Res)),
+                       sex = rep(sex, nrow(Res)),
+                       name = Res[ , 'name'], home = Res[ , 'home'],
+                       age = as.numeric(Res[, 'ag']), 
+                       runTime = runTime,
+                       stringsAsFactors = FALSE)
+  invisible(Results)
 }</code></pre>
 <pre class="r"><code>#### Textbook Function
 
@@ -292,12 +318,27 @@ menTablesV2$'1999'[1:10]</code></pre>
 ## [10] &quot;    8    8/1503    30 Felix Limo            19 Kenya                47:31#   47:31 &quot;</code></pre>
 <pre class="r"><code>#### Save the outputs
 save(menTablesV2, file = &quot;CBMenTextTables_Serna.rda&quot;)</code></pre>
-<pre class="r"><code>menResMat = lapply(menTablesV2, extractVariables)
-length(menResMat)</code></pre>
+<pre class="r"><code># menResMat = lapply(menTablesV2, extractVariables)
+# length(menResMat)
+# sapply(menResMat, nrow)
+
+separatorIdx = grep(&quot;^===&quot;, menTablesV2[[&quot;2006&quot;]])
+separatorRow = menTablesV2[['2006']][separatorIdx]
+separatorRowX = paste(substring(separatorRow, 1, 63), &quot; &quot;, 
+                      substring(separatorRow, 65, nchar(separatorRow)), 
+                      sep = &quot;&quot;)
+menTablesV2[['2006']][separatorIdx] = separatorRowX
+
+menResMat = sapply(menTablesV2, extractVariables)
+menDF = mapply(createDF, menResMat, year = 1999:2012,
+               sex = rep(&quot;M&quot;, 14), SIMPLIFY = FALSE)</code></pre>
+<pre><code>## Warning in data.frame(year = rep(year, nrow(Res)), sex = rep(sex,
+## nrow(Res)), : NAs introduced by coercion</code></pre>
+<pre class="r"><code>length(menDF)</code></pre>
 <pre><code>## [1] 14</code></pre>
-<pre class="r"><code>sapply(menResMat, nrow)</code></pre>
+<pre class="r"><code>sapply(menDF, nrow)</code></pre>
 <pre><code>## 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 
-## 3190 3016 3561 3723 3946 4156 4324 5235 5274 5905 6649 6909 7011 7193</code></pre>
+## 3190 3016 3561 3723 3946 4156 4324 5235 5252 5905 6649 6909 7011 7193</code></pre>
 </div>
 
 
