@@ -13,8 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Intro
 ```{r libraries}
+# install.packages("dplyr")
+# install.packages("tidyr")
 library(XML)
-library(dplyr)
+# library(dplyr)
+library(tidyr)
 ```
 
 ```{r createUrls}
@@ -206,7 +209,24 @@ menTablesV2[['2006']][separatorIdx] = separatorRowX
 menResMat = sapply(menTablesV2, extractVariables)
 menDF = mapply(createDF, menResMat, year = 1999:2012,
                sex = rep("M", 14), SIMPLIFY = FALSE)
-length(menDF)
+sapply(menDF, nrow)
+#remove records with NA for age
+# menDF$`1999` = menDF$`1999`[-which(is.na(menDF$`1999`$age)),]
+# menDF$`2000` = menDF$`2000`[-which(is.na(menDF$`2000`$age)),]
+# menDF$`2001` = menDF$`2001`[-which(is.na(menDF$`2001`$age)),]
+# menDF$`2002` = menDF$`2002`[-which(is.na(menDF$`2002`$age)),]
+# menDF$`2003` = menDF$`2003`[-which(is.na(menDF$`2003`$age)),]
+# menDF$`2004` = menDF$`2004`[-which(is.na(menDF$`2004`$age)),]
+# menDF$`2005` = menDF$`2005`[-which(is.na(menDF$`2005`$age)),]
+# menDF$`2006` = menDF$`2006`[-which(is.na(menDF$`2006`$age)),]
+# menDF$`2007` = menDF$`2007`[-which(is.na(menDF$`2007`$age)),]
+# menDF$`2008` = menDF$`2008`[-which(is.na(menDF$`2008`$age)),]
+# menDF$`2009` = menDF$`2009`[-which(is.na(menDF$`2009`$age)),]
+# menDF$`2010` = menDF$`2010`[-which(is.na(menDF$`2010`$age)),]
+# menDF$`2011` = menDF$`2011`[-which(is.na(menDF$`2011`$age)),]
+# menDF$`2012` = menDF$`2012`[-which(is.na(menDF$`2012`$age)),]
+
+
 sapply(menDF, nrow)
 cbMen = do.call(rbind, menDF)
 
