@@ -226,6 +226,32 @@ cbMen = do.call(rbind, menDF)
 ```
 
 ```{r Testcode}
+
+# READ-WRITE CSV
+cbMen_path <- "C:/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/cbMen.csv"
+
+read_or_write = "read"
+
+if (read_or_write == 'read'){
+  
+  cbMen <- read_csv(cbMen_path, col_names = TRUE,
+                    col_types = cols(year =
+                                     col_double(),
+                                     sex = col_character(),
+                                     name = col_character(),
+                                     home = col_character(),
+                                     age = col_double(),
+                                     runTime = col_double()
+                                     )
+                    )
+  
+} else if(read_cbMen == 'write'){
+  
+  write_csv(cbMen, cbMen_path)
+  }
+
+
+
 # RECORD COUNT: 70047
 boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)") 
 
@@ -234,51 +260,108 @@ cbMen <- filter(cbMen, !(year==2001 & runTime == min(runTime) & age == 70))
 
 # RECORD COUNT: 70046
 # BOXPLOT: runTime by Year
+image_location = "C:/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/Images/Boxplot/"
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runTime_by_Year.jpeg"))
 boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)")
+dev.off()
 
 # BOXPLOT: AGE BY YEAR
 boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+
 
 # LOCATE AND REMOVE AGE OUTLIERS
 cbMen <- filter(cbMen, !(year %in% c(2001:2003) & age %in% c(0,1, 2, 4)))
 
 # RECORD COUNT: 70039
 # BOXPLOT: Age by Year
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_by_Year.jpeg"))
 boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+dev.off()
+
+image_location = "C:/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/Images/QQ_Plot/"
 
 # QQ PLOT: AGE
-qqnorm(cbMen$age, main = "Q-Q Plot Age")
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_qq_plot.jpeg"))
+qqnorm(cbMen$age, main = "Q-Q Plot: Men's Age")
 qqline(cbMen$age)
+dev.off()
 
 # QQ PLOT: AGE BY YEAR
-par("mar")
+#par("mar")
+#par(mar=c(1,1,1,1))
+#jpeg(paste(image_location, "mens_age_by_year_qq_plot.jpeg"))
+#par(mfrow=c(8,2))
+#for (i in seq(from=1999, to=2012, by=1)){
+#  temp <- filter(cbMen, year == i)
+
+#  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+#  qqline(temp$age)
+#}
+#dev.off()
+
 par(mar=c(1,1,1,1))
 
-par(mfrow=c(7,2))
+par(mfrow=c(1,1))
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
-  
-  qqnorm(temp$age, main = paste("Q-Q Plot Age: ", i, sep=" "))
+  jpeg(paste(image_location, "mens_age_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
   qqline(temp$age)
+  Sys.sleep(1)
+  dev.off()
 }
 
+
 # QQ PLOT: RUNTIME
-qqnorm(cbMen$runTime, main = "Q-Q Plot runTime")
+par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runtime_qq_plot.jpeg"))
+qqnorm(cbMen$runTime, main = "Q-Q Plot: Men's runTime")
 qqline(cbMen$runTime)
 
 # QQ PLOT: RUNTIME BY YEAR
 par("mar")
 par(mar=c(1,1,1,1))
 
-par(mfrow=c(7,2))
+par(mfrow=c(1,1))
 
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
-  
-  qqnorm(temp$runTime, main = paste("Q-Q Plot Runtime: ", i, sep=" "))
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$runTime, main = paste("Q-Q Plot: Men's Runtime: ", i, sep=" "))
   qqline(temp$runTime)
+  Sys.sleep(1)
+  dev.off()
 }
 
+image_location = "C:/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/Images/Density/"
 
+# DENSITY CURVE - AGE
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_age_by_", i, "_density.jpeg"))
+  hist(temp$age, mean(temp$age), prob=T, main =  paste("Density: Men's Age: ", i, sep=" "))
+  lines(density(temp$age))
+  Sys.sleep(1)
+  dev.off()
+}
 
+# DENSITY CURVE - RUNTIME
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_density.jpeg"))
+  hist(temp$runTime, mean(temp$runTime), prob=T, main =  paste("Density: Men's runTime: ", i, sep=" "))
+  lines(density(temp$runTime))
+  Sys.sleep(1)
+  dev.off()
+}
+
+dev.set(dev.next())
+temp <- filter(cbMen, year == 1999)
+hist(temp$age, 20, prob=T)
+lines(density(temp$age))
 ```
