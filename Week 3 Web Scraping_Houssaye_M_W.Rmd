@@ -13,25 +13,13 @@ knitr::opts_chunk$set(echo = TRUE)
 #URL for MEN and Library
 
 library(XML)
+
+library(tidyverse)
+
+
 ubase = "http://www.cherryblossom.org/"
 
-#### From text
-menURLs = 
-  c("cb99m.htm", 
-    "cb003m.htm", 
-    "results/2001/oof_m.html",
-    "results/2002/oofm.htm", 
-    "results/2003/CB03-M.HTM",
-    "results/2004/men.htm", 
-    "results/2005/CB05-M.htm", 
-    "results/2006/men.htm", 
-    "results/2007/men.htm", 
-    "results/2008/men.htm", 
-    "results/2009/09cucb-M.htm",
-    "results/2010/2010cucb10m-m.htm", 
-    "results/2011/2011cucb10m-m.htm",
-    "results/2012/2012cucb10m-m.htm")
-####
+
 
 #### Revised URLS
 menURLsV2 = 
@@ -112,7 +100,6 @@ extractResTableV2 =
     writeLines(els, con = file)
   }
 
-
 extractResTableV3 =
   #
   # Retrieve data from web site, 
@@ -132,13 +119,13 @@ extractResTableV3 =
       txt = xmlValue(ff[[4]])
       els = strsplit(txt, "\r\n")[[1]]
     }
-    else if (year == 2009 & sex == "female") {
+    #else if (year == 2009 & sex == "female") {
       # Get preformatted text from <div class="Section1"> element
       # Each line of results is in a <pre> element
-      div1 = getNodeSet(doc, "//div[@class='Section1']")
-      pres = getNodeSet(div1[[1]], "//pre")
-      els = sapply(pres, xmlValue)
-    }
+      #div1 = getNodeSet(doc, "//div[@class='Section1']")
+      #pres = getNodeSet(div1[[1]], "//pre")
+      #els = sapply(pres, xmlValue)
+    #}
     else if (year == 1999 & sex == "female") { # have to add this else if statement
       # Get preformatted text from <pre> elements
       pres = getNodeSet(doc, "//pre")
@@ -263,16 +250,20 @@ urlsV2[1]
 
 
 ```{r}
+years = 1999:2012
+
 ###Correct function for 1999 normalization
 #### Corrected function to pull down Male tables with consistent format
+mensTables = lapply (urlsV2, extractResTableV2)
+
 menTablesV2 = mapply(extractResTableV2, url = urlsV2, year = years)
 names(menTablesV2) = years
 sapply(menTablesV2, length)
 
 #### Confirmation that the 1999 and other years have consistent formatting
 #####menTablesV2$'1999'[1:10]
-#####menTablesV2[[2]][1:10]
-#####menTablesV2[[3]][1:10]
+####menTablesV2[[2]][1:10]
+menTablesV2[[3]][1:10]
 #####menTablesV2[[4]][1:10]
 #####menTablesV2[[5]][1:10]
 #####menTablesV2[[6]][1:10]
@@ -312,23 +303,165 @@ menResMat = lapply(menTablesV2, extractVariables)
 ```
 
 ```{r}
-menDF1 = mapply(createDF, menResMat, year = 1999:2012,
+menDF = mapply(createDF, menResMat, year = 1999:2012,
                sex = rep("M", 14), SIMPLIFY = FALSE)
+sapply(menDF, nrow)
+#remove records with NA for age
+menDF$`1999` = menDF$`1999`[-which(is.na(menDF$`1999`$age)),]
+menDF$`2002` = menDF$`2002`[-which(is.na(menDF$`2002`$age)),]
+menDF$`2005` = menDF$`2005`[-which(is.na(menDF$`2005`$age)),]
+menDF$`2007` = menDF$`2007`[-which(is.na(menDF$`2007`$age)),]
+menDF$`2009` = menDF$`2009`[-which(is.na(menDF$`2009`$age)),]
+menDF$`2010` = menDF$`2010`[-which(is.na(menDF$`2010`$age)),]
+menDF$`2012` = menDF$`2012`[-which(is.na(menDF$`2012`$age)),]
 
-menDF2 <- as.data.frame(menDF1)
 
-length(menDF1)
-
-sapply(menDF1, nrow)
-
-cbMen = do.call(rbind, menDF1)
-
-boxplot(cbMen$ag ~ cbMen$Year, data = cbMen)
+sapply(menDF, nrow)
+cbMen = do.call(rbind, menDF)
 
 
-###########Placholder for removing NA code
+
 ```
+```{r Testcode}
 
+# READ-WRITE CSV
+cbMen_path <- "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/cbMen.csv"
+
+read_or_write = "read"
+
+if (read_or_write == 'read'){
+  
+  cbMen <- read_csv(cbMen_path, col_names = TRUE,
+                    col_types = cols(year =
+                                     col_double(),
+                                     sex = col_character(),
+                                     name = col_character(),
+                                     home = col_character(),
+                                     age = col_double(),
+                                     runTime = col_double()
+                                     )
+                    )
+  
+} else if(read_cbMen == 'write'){
+  
+  write_csv(cbMen, cbMen_path)
+  }
+
+
+
+# RECORD COUNT: 70047
+boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)") 
+
+# DROP THE ERROR FROM THE DATASET
+cbMen <- filter(cbMen, !(year==2001 & runTime == min(runTime) & age == 70))
+
+# RECORD COUNT: 70046
+# BOXPLOT: runTime by Year
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Boxplot/"
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runTime_by_Year.jpeg"))
+boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)")
+dev.off()
+
+# BOXPLOT: AGE BY YEAR
+boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+
+
+# LOCATE AND REMOVE AGE OUTLIERS
+cbMen <- filter(cbMen, !(year %in% c(2001:2003) & age %in% c(0,1, 2, 4)))
+
+# RECORD COUNT: 70039
+# BOXPLOT: Age by Year
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_by_Year.jpeg"))
+boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+dev.off()
+
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/QQ_Plot/"
+
+# QQ PLOT: AGE
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_qq_plot.jpeg"))
+qqnorm(cbMen$age, main = "Q-Q Plot: Men's Age")
+qqline(cbMen$age)
+dev.off()
+
+# QQ PLOT: AGE BY YEAR
+#par("mar")
+#par(mar=c(1,1,1,1))
+#jpeg(paste(image_location, "mens_age_by_year_qq_plot.jpeg"))
+#par(mfrow=c(8,2))
+#for (i in seq(from=1999, to=2012, by=1)){
+#  temp <- filter(cbMen, year == i)
+
+#  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+#  qqline(temp$age)
+#}
+#dev.off()
+
+par(mar=c(1,1,1,1))
+
+par(mfrow=c(1,1))
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_age_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+  qqline(temp$age)
+  Sys.sleep(1)
+  dev.off()
+}
+
+
+# QQ PLOT: RUNTIME
+par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runtime_qq_plot.jpeg"))
+qqnorm(cbMen$runTime, main = "Q-Q Plot: Men's runTime")
+qqline(cbMen$runTime)
+
+# QQ PLOT: RUNTIME BY YEAR
+par("mar")
+par(mar=c(1,1,1,1))
+
+par(mfrow=c(1,1))
+
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$runTime, main = paste("Q-Q Plot: Men's Runtime: ", i, sep=" "))
+  qqline(temp$runTime)
+  Sys.sleep(1)
+  dev.off()
+}
+
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Density/"
+
+# DENSITY CURVE - AGE
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_age_by_", i, "_density.jpeg"))
+  hist(temp$age, mean(temp$age), prob=T, main =  paste("Density: Men's Age: ", i, sep=" "))
+  lines(density(temp$age))
+  Sys.sleep(1)
+  dev.off()
+}
+
+# DENSITY CURVE - RUNTIME
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_density.jpeg"))
+  hist(temp$runTime, mean(temp$runTime), prob=T, main =  paste("Density: Men's runTime: ", i, sep=" "))
+  lines(density(temp$runTime))
+  Sys.sleep(1)
+  dev.off()
+}
+
+dev.set(dev.next())
+temp <- filter(cbMen, year == 1999)
+hist(temp$age, 20, prob=T)
+lines(density(temp$age))
+```
 
 ```{r}
 #URL for WOMEN and Library
@@ -365,15 +498,46 @@ urlsV3[1]
 ```
 
 ```{r}
+
 womenTables = lapply(urlsV3, extractResTableV3)
 
+years1 = 1999:2012
 
-options(error = recover)
-womenTablesv2 = mapply(extractResTableV3, url = urlsV3, year = years)
-names(womenTables) = years
+
+
+womenTablesv2 = mapply(extractResTableV3, url = urlsV3, year = years1)
+names(womenTables) = years1
 sapply(womenTables, length)
 
-womenTables[2]
+womenTablesv2[[1]][1:10]
+womenTablesv2[[2]][1:10]
+womenTablesv2[[3]][1:10]
+womenTablesv2[[4]][1:10]
+womenTablesv2[[5]][1:10]
+womenTablesv2[[6]][1:10]
+womenTablesv2[[7]][1:10]
+womenTablesv2[[8]][1:10]
+
+save(womenTablesv2, file = "CBWoMenTextTables_Houssaye.rda")
+
+
+separatorIdx = grep("^===", womenTablesv2[["2006"]])
+separatorRow = womenTablesv2[['2006']][separatorIdx]
+separatorRowX = paste(substring(separatorRow, 1, 63), " ", 
+                      substring(separatorRow, 65, nchar(separatorRow)), 
+                      sep = "")
+womenTablesv2[['2006']][separatorIdx] = separatorRowX
+
+
+
+womenResMat = lapply(womenTablesv2, extractVariables)
+
+
+
+```
+
+
+
 
 
 
