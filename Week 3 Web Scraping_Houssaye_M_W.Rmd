@@ -40,9 +40,7 @@ menURLsV2 =
     )
 ####
 
-#### Text URLS
-urls = paste(ubase, menURLs, sep="")
-urls[1:4]
+
 
 #### Revised URLS
 urlsV2 = paste(ubase, menURLsV2, sep="")
@@ -244,7 +242,7 @@ createDF = function(Res, year, sex)
 
 
 ```{r}
-urls[1]
+
 urlsV2[1]
 ```
 
@@ -512,19 +510,70 @@ womenTablesv2 = mapply(extractResTableV3, url = urlsV3, year = years1)
 names(womenTablesv2) = years1
 sapply(womenTablesv2, length)
 
-womenTablesv2[[1]][1:10]
-womenTablesv2[[2]][1:10]
-womenTablesv2[[3]][1:10]
-womenTablesv2[[4]][1:10]
-womenTablesv2[[5]][1:10]
-womenTablesv2[[6]][1:10]
-womenTablesv2[[7]][1:10]
-womenTablesv2[[8]][1:10]
+###womenTablesv2[[1]][1:10]
+###womenTablesv2[[2]][1:10]
+###womenTablesv2[[3]][1:10]
+###womenTablesv2[[4]][1:10]
+###womenTablesv2[[5]][1:10]
+###womenTablesv2[[6]][1:10]
+###womenTablesv2[[7]][1:10]
+###womenTablesv2[[8]][1:10]
 
 save(womenTablesv2, file = "CBWoMenTextTables_Houssaye.rda")
+```
+
+
+```{r}
 
 #2001 table rows 1-10
 ##2001 Women's table has no "===" row and no variable names.  need to include those elements in for 2001.
+
+library(dplyr)
+library(tidyr)
+#install.packages("splitstackshape")
+library(splitstackshape)
+library(stringr)
+library(stringi)
+
+varNamesv2 <- c("Place", "Num Name","Ag Hometown", "Net Gun")
+
+####stri_length(womenTablesv2[[3]])
+####womenTablesv2[[3]] <- womenTablesv2[[3]][3:2976]
+####womenTablesv2[[3]][1:10]
+####womenTablesv2[[3]] <- paste(womenTablesv2[[3]],varNamesv2,sep = " ")
+####womenTablesv2[[3]][1:10]
+
+Women03 = as.data.frame(womenTablesv2[[3]])
+colnames(Women03) <- c("column")
+women03v2 <- concat.split(Women03,"column","     ")
+women03v3 <- women03v2[,-1]
+women03v4 <- women03v3[-(1:3),]
+colnames(women03v4) <- c("Place", "Num Name","Ag Hometown", "Net","Gun")
+women03v4[1:10,]
+
+
+```
+
+
+
+
+
+
+
+
+
+##women03v3 <- as.data.frame(paste(women03v2[3],women03v2[4]))
+
+
+col_women03 <- c("PLACE","NUM","AG","HOMETOWN","NET","GUN")
+
+
+
+womenResMat = lapply(womenTablesv2, extractVariables)
+
+
+
+```
 
 
 woIndex = grep("^    ", womenTablesv2[["2001"]])
@@ -540,12 +589,6 @@ separatorIdx1 = grep("^===", womenTablesv2[["2001"]])
 separatorRow1 = womenTablesv2[['2001']][separatorIdx]
 separatorRowX1 = paste(substring(separatorIdx1, 1, 63), " ", sep = "") 
 
-
-
-
-
-
-
 separatorIdx = grep("^===", menTablesV2[["2001"]])
 separatorRow = menTablesV2[['2006']][separatorIdx]
 separatorRowX = paste(substring(separatorRow, 1, 63), " ", 
@@ -554,45 +597,14 @@ separatorRowX = paste(substring(separatorRow, 1, 63), " ",
 menTablesV2[['2006']][separatorIdx] = separatorRowX
 
 
-library(dplyr)
-library(tidyr)
-#install.packages("splitstackshape")
-library(splitstackshape)
-
-menTablesV2[[3]][1:10]
-mens2003col <- menTablesV2[[3]][3:4,]
-
-
 Women03 <- as.data.frame(womenTablesv2[[3]])
 colnames(Women03) <- c("column")
 women03v2 <- concat.split(Women03,"column","     ")
 women03v3 <- (women03v2[,-1:-3])
 women03v4 <- paste[women033,4]
 
-
-
-
-
-##women03v3 <- as.data.frame(paste(women03v2[3],women03v2[4]))
-
-
-colnames(womenTablesv2[[3]]) <- c("PLACE","NUM","AG","HOMETOWN","NET","GUN")
-
-
-
-womenResMat = lapply(womenTablesv2, extractVariables)
-
-
-
-```
-
-
-
-
-
-
-
-
+menTablesV2[[3]][1:10]
+mens2003col <- menTablesV2[[3]][3:4,]
 
 
 
