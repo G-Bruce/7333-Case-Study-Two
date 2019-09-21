@@ -502,11 +502,14 @@ urlsV3[1]
 
 womenTables = lapply(urlsV3, extractResTableV3)
 
+#womenTables[[3]][1:3] = mensTables[[3]][1:3]
+#womenTables[[3]] = append(x=womenTables[[3]], values=mensTables[[3]][4:5], after = 3)
+
 years1 = 1999:2012
 
 
 
-womenTablesv2 = mapply(extractResTableV3, url = urlsV3, year = years1)
+womenTablesv2 <- mapply(extractResTableV3, url = urlsV3, year = years1)
 names(womenTablesv2) = years1
 sapply(womenTablesv2, length)
 
@@ -522,6 +525,50 @@ sapply(womenTablesv2, length)
 save(womenTablesv2, file = "CBWoMenTextTables_Houssaye.rda")
 ```
 
+```{r fix2001Women}
+womenTablesv2[["2001"]][1:3] <- menTablesV2[["2001"]][1:3]
+womenTablesv2[["2001"]] <- append(x=womenTablesv2[["2001"]], values=menTablesV2[["2001"]][4:5], after = 3)
+```
+
+```{r parseWomenData}
+separatorIdxWomen = grep("^===", womenTablesv2[["2006"]])
+separatorRowWomen = womenTablesv2[['2006']][separatorIdxWomen]
+separatorRowXWomen = paste(substring(separatorRowWomen, 1, 63), " ", 
+                      substring(separatorRowWomen, 65, nchar(separatorRowWomen)), 
+                      sep = "")
+womenTablesv2[['2006']][separatorIdxWomen] = separatorRowXWomen
+
+womenResMat = sapply(womenTablesv2, extractVariables)
+womenDF = mapply(createDF, womenResMat, year = 1999:2012,
+               sex = rep("F", 14), SIMPLIFY = FALSE)
+sapply(womenDF, nrow)
+sapply(womenDF, nrow)
+cbWomen = do.call(rbind, womenDF)
+```
+```{r writeWomenCSV}
+# READ-WRITE CSV
+cbWomen_path <- "../7333-Case-Study-Two/cbWomen.csv"
+
+read_or_write = "read"
+
+if (read_or_write == 'read'){
+  
+  cbWomen <- read_csv(cbWomen_path, col_names = TRUE,
+                    col_types = cols(year =
+                                     col_double(),
+                                     sex = col_character(),
+                                     name = col_character(),
+                                     home = col_character(),
+                                     age = col_double(),
+                                     runTime = col_double()
+                                     )
+                    )
+  
+} else if(read_or_write == 'write'){
+  
+  write_csv(cbWomen, cbWomen_path)
+  }
+```
 
 ```{r}
 

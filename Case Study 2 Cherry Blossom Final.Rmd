@@ -1,0 +1,739 @@
+---
+title: "Quantifying_casestudy4"
+author: "Brandon"
+date: "September 14, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#URL for MEN and Library
+
+library(XML)
+
+library(tidyverse)
+
+
+ubase = "http://www.cherryblossom.org/"
+
+
+
+#### Revised URLS
+menURLsV2 = 
+  c("results/1999/cb99m.html", #"cb99m.htm"
+    "results/2000/Cb003m.htm", #"cb003m.htm"
+    "results/2001/oof_m.html", #"results/2001/oof_m.html"
+    "results/2002/oofm.htm", #"results/2002/oofm.htm"
+    "results/2003/CB03-M.HTM", #"results/2003/CB03-M.HTM"
+    "results/2004/men.htm", #"results/2004/men.htm"
+    "results/2005/CB05-M.htm", #"results/2005/CB05-M.htm"
+    "results/2006/men.htm", #"results/2006/men.htm"
+    "results/2007/men.htm", #"results/2007/men.htm"
+    "results/2008/men.htm", #"results/2008/men.htm"
+    "results/2009/09cucb-M.htm", #"results/2009/09cucb-M.htm"
+    "results/2010/2010cucb10m-m.htm", #"results/2010/2010cucb10m-m.htm"
+    "results/2011/2011cucb10m-m.htm", #"results/2011/2011cucb10m-m.htm"
+    "results/2012/2012cucb10m-m.htm" #"results/2012/2012cucb10m-m.htm"
+    )
+####
+
+
+
+#### Revised URLS
+urlsV2 = paste(ubase, menURLsV2, sep="")
+urlsV2[1:4]
+
+```
+
+```{r}
+
+#FUNCTIONS
+
+#extractResTablev2
+
+extractResTableV2 =
+  #
+  # Retrieve data from web site, 
+  # find the preformatted text,
+  # and write lines or return as a character vector.
+  #
+  function(url = "http://www.cherryblossom.org/results/2009/09cucb-F.htm",
+           year = 1999, sex = "male", file = NULL)
+  {
+    #added encoding for windows users who get an "A" symbol
+    doc = htmlParse(url, encoding="UTF-8")
+    
+    if (year == 2000) {
+      # Get preformatted text from 4th font element
+      # The top file is ill formed so the <pre> search doesn't work.
+      ff = getNodeSet(doc, "//font")
+      txt = xmlValue(ff[[4]])
+      els = strsplit(txt, "\r\n")[[1]]
+    }
+    else if (year == 2009 & sex == "male") { 
+      # Get preformatted text from <div class="Section1"> element
+      # Each line of results is in a <pre> element
+      div1 = getNodeSet(doc, "//div[@class='Section1']")
+      pres = getNodeSet(div1[[1]], "//pre")
+      els = sapply(pres, xmlValue)
+    }
+    else if (year == 1999 & sex == "male") { # have to add this else if statement
+      # Get preformatted text from <pre> elements
+      pres = getNodeSet(doc, "//pre")
+      txt = xmlValue(pres[[1]])
+      els = strsplit(txt, "\n")[[1]]   
+    } 
+    else {
+      # Get preformatted text from <pre> elements
+      pres = getNodeSet(doc, "//pre")
+      txt = xmlValue(pres[[1]])
+      els = strsplit(txt, "\r\n")[[1]]   
+    } 
+    
+    if (is.null(file)) return(els)
+    # Write the lines as a text file.
+    writeLines(els, con = file)
+  }
+
+extractResTableV3 =
+  #
+  # Retrieve data from web site, 
+  # find the preformatted text,
+  # and write lines or return as a character vector.
+  #
+  function(url = "http://www.cherryblossom.org/results/2009/09cucb-F.htm",
+           year = 1999, sex = "female", file = NULL)
+  {
+    #added encoding for windows users who get an "A" symbol
+    doc = htmlParse(url, encoding="UTF-8")
+    
+    if (year == 2000) {
+      # Get preformatted text from 4th font element
+      # The top file is ill formed so the <pre> search doesn't work.
+      ff = getNodeSet(doc, "//font")
+      txt = xmlValue(ff[[4]])
+      els = strsplit(txt, "\r\n")[[1]]
+    }
+    #else if (year == 2009 & sex == "female") {
+      # Get preformatted text from <div class="Section1"> element
+      # Each line of results is in a <pre> element
+      #div1 = getNodeSet(doc, "//div[@class='Section1']")
+      #pres = getNodeSet(div1[[1]], "//pre")
+      #els = sapply(pres, xmlValue)
+    #}
+    else if (year == 1999 & sex == "female") { # have to add this else if statement
+      # Get preformatted text from <pre> elements
+      pres = getNodeSet(doc, "//pre")
+      txt = xmlValue(pres[[1]])
+      els = strsplit(txt, "\n")[[1]]   
+    } 
+    else {
+      # Get preformatted text from <pre> elements
+      pres = getNodeSet(doc, "//pre")
+      txt = xmlValue(pres[[1]])
+      els = strsplit(txt, "\r\n")[[1]]   
+    } 
+    
+    if (is.null(file)) return(els)
+    # Write the lines as a text file.
+    writeLines(els, con = file)
+  }
+
+
+#findColLocs
+
+findColLocs = function(spacerRow) {
+
+  spaceLocs = gregexpr(" ", spacerRow)[[1]]
+  rowLength = nchar(spacerRow)
+
+  if (substring(spacerRow, rowLength, rowLength) != " ")
+    return( c(0, spaceLocs, rowLength + 1))
+  else return(c(0, spaceLocs))
+}
+
+selectCols = function(shortColNames, headerRow, searchLocs) {
+  sapply(shortColNames, function(shortName, headerRow, searchLocs){
+    startPos = regexpr(shortName, headerRow)[[1]]
+    if (startPos == -1) return( c(NA, NA) )
+    index = sum(startPos >= searchLocs)
+    c(searchLocs[index] + 1, searchLocs[index + 1])
+  }, headerRow = headerRow, searchLocs = searchLocs )
+}
+
+
+#extractVariables
+
+extractVariables = 
+function(file, varNames =c("name", "home", "ag", "gun",
+                           "net", "time"))
+{
+  
+  # Find the index of the row with =s
+  eqIndex = grep("^===", file)
+  # Extract the two key rows and the data 
+  spacerRow = file[eqIndex] 
+  headerRow = tolower(file[ eqIndex - 1 ])
+  body = file[ -(1 : eqIndex) ]
+       # Remove footnotes and blank rows
+  footnotes = grep("^[[:blank:]]*(\\*|\\#)", body)
+  if ( length(footnotes) > 0 ) body = body[ -footnotes ]
+  blanks = grep("^[[:blank:]]*$", body)
+  if (length(blanks) > 0 ) body = body[ -blanks ]
+  
+  
+  # Obtain the starting and ending positions of variables   
+  searchLocs = findColLocs(spacerRow)
+  locCols = selectCols(varNames, headerRow, searchLocs)
+  
+  Values = mapply(substr, list(body), start = locCols[1, ], 
+                  stop = locCols[2, ])
+  colnames(Values) = varNames
+  
+  return(Values)
+}
+
+
+selectCols = function(shortColNames, headerRow, searchLocs) {
+  sapply(shortColNames, function(shortName, headerRow, searchLocs){
+    startPos = regexpr(shortName, headerRow)[[1]]
+    if (startPos == -1) return( c(NA, NA) )
+    index = sum(startPos >= searchLocs)
+    c(searchLocs[index] + 1, searchLocs[index + 1])
+  }, headerRow = headerRow, searchLocs = searchLocs )
+}
+
+convertTime = function(time) {
+  timePieces = strsplit(time, ":")
+  timePieces = sapply(timePieces, as.numeric)
+  sapply(timePieces, function(x) {
+                      if (length(x) == 2) x[1] + x[2]/60
+                      else 60*x[1] + x[2] + x[3]/60
+                      })
+}
+createDF = function(Res, year, sex) 
+{
+  # Determine which time to use
+  if ( !is.na(Res[1, 'net']) ) useTime = Res[ , 'net']
+  else if ( !is.na(Res[1, 'gun']) ) useTime = Res[ , 'gun']
+  else useTime = Res[ , 'time']
+  
+  # Remove # and * and blanks from time
+  useTime = gsub("[#\\*[:blank:]]", "", useTime)
+  runTime = convertTime(useTime[ useTime != "" ])
+  
+  # Drop rows with no time
+  Res = Res[ useTime != "", ]
+  
+  Results = data.frame(year = rep(year, nrow(Res)),
+                       sex = rep(sex, nrow(Res)),
+                       name = Res[ , 'name'], home = Res[ , 'home'],
+                       age = as.numeric(Res[, 'ag']), 
+                       runTime = runTime,
+                       stringsAsFactors = FALSE)
+  invisible(Results)
+}
+
+
+```
+
+
+```{r}
+
+urlsV2[1]
+```
+
+
+```{r}
+years = 1999:2012
+
+###Correct function for 1999 normalization
+#### Corrected function to pull down Male tables with consistent format
+mensTables = lapply (urlsV2, extractResTableV2)
+
+menTablesV2 = mapply(extractResTableV2, url = urlsV2, year = years)
+names(menTablesV2) = years
+sapply(menTablesV2, length)
+
+#### Confirmation that the 1999 and other years have consistent formatting
+#####menTablesV2$'1999'[1:10]
+####menTablesV2[[2]][1:10]
+menTablesV2[[3]][1:10]
+#####menTablesV2[[4]][1:10]
+#####menTablesV2[[5]][1:10]
+#####menTablesV2[[6]][1:10]
+#####menTablesV2[[7]][1:10]
+menTablesV2[[8]][1:10]
+#### Save the outputs
+save(menTablesV2, file = "CBMenTextTables_Houssaye.rda")
+
+```
+
+
+
+
+```{r}
+
+
+separatorIdx = grep("^===", menTablesV2[["2006"]])
+separatorRow = menTablesV2[['2006']][separatorIdx]
+separatorRowX = paste(substring(separatorRow, 1, 63), " ", 
+                      substring(separatorRow, 65, nchar(separatorRow)), 
+                      sep = "")
+menTablesV2[['2006']][separatorIdx] = separatorRowX
+
+
+
+
+```
+
+
+
+```{r}
+
+
+
+menResMat = lapply(menTablesV2, extractVariables)
+
+
+## looking at results and it appears we have peeled out headers.  Now time to explore individual years
+
+```
+
+```{r}
+menDF = mapply(createDF, menResMat, year = 1999:2012,
+               sex = rep("M", 14), SIMPLIFY = FALSE)
+sapply(menDF, nrow)
+#remove records with NA for age
+menDF$`1999` = menDF$`1999`[-which(is.na(menDF$`1999`$age)),]
+menDF$`2002` = menDF$`2002`[-which(is.na(menDF$`2002`$age)),]
+menDF$`2005` = menDF$`2005`[-which(is.na(menDF$`2005`$age)),]
+menDF$`2007` = menDF$`2007`[-which(is.na(menDF$`2007`$age)),]
+menDF$`2009` = menDF$`2009`[-which(is.na(menDF$`2009`$age)),]
+menDF$`2010` = menDF$`2010`[-which(is.na(menDF$`2010`$age)),]
+menDF$`2012` = menDF$`2012`[-which(is.na(menDF$`2012`$age)),]
+
+
+sapply(menDF, nrow)
+cbMen = do.call(rbind, menDF)
+
+
+
+```
+```{r Testcode}
+
+# READ-WRITE CSV
+cbMen_path <- "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/cbMen.csv"
+
+read_or_write = "read"
+
+if (read_or_write == 'read'){
+  
+  cbMen <- read_csv(cbMen_path, col_names = TRUE,
+                    col_types = cols(year =
+                                     col_double(),
+                                     sex = col_character(),
+                                     name = col_character(),
+                                     home = col_character(),
+                                     age = col_double(),
+                                     runTime = col_double()
+                                     )
+                    )
+  
+} else if(read_cbMen == 'write'){
+  
+  write_csv(cbMen, cbMen_path)
+  }
+
+
+
+# RECORD COUNT: 70047
+boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)") 
+
+# DROP THE ERROR FROM THE DATASET
+cbMen <- filter(cbMen, !(year==2001 & runTime == min(runTime) & age == 70))
+
+# RECORD COUNT: 70046
+# BOXPLOT: runTime by Year
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Boxplot/"
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runTime_by_Year.jpeg"))
+boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)")
+dev.off()
+
+# BOXPLOT: AGE BY YEAR
+boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+
+
+# LOCATE AND REMOVE AGE OUTLIERS
+cbMen <- filter(cbMen, !(year %in% c(2001:2003) & age %in% c(0,1, 2, 4)))
+
+# RECORD COUNT: 70039
+# BOXPLOT: Age by Year
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_by_Year.jpeg"))
+boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
+dev.off()
+
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/QQ_Plot/"
+
+# QQ PLOT: AGE
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_age_qq_plot.jpeg"))
+qqnorm(cbMen$age, main = "Q-Q Plot: Men's Age")
+qqline(cbMen$age)
+dev.off()
+
+# QQ PLOT: AGE BY YEAR
+#par("mar")
+#par(mar=c(1,1,1,1))
+#jpeg(paste(image_location, "mens_age_by_year_qq_plot.jpeg"))
+#par(mfrow=c(8,2))
+#for (i in seq(from=1999, to=2012, by=1)){
+#  temp <- filter(cbMen, year == i)
+
+#  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+#  qqline(temp$age)
+#}
+#dev.off()
+
+par(mar=c(1,1,1,1))
+
+par(mfrow=c(1,1))
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_age_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+  qqline(temp$age)
+  Sys.sleep(1)
+  dev.off()
+}
+
+
+# QQ PLOT: RUNTIME
+par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(1,1))
+jpeg(paste(image_location, "mens_runtime_qq_plot.jpeg"))
+qqnorm(cbMen$runTime, main = "Q-Q Plot: Men's runTime")
+qqline(cbMen$runTime)
+
+# QQ PLOT: RUNTIME BY YEAR
+par("mar")
+par(mar=c(1,1,1,1))
+
+par(mfrow=c(1,1))
+
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_qq_plot.jpeg"))
+  qqnorm(temp$runTime, main = paste("Q-Q Plot: Men's Runtime: ", i, sep=" "))
+  qqline(temp$runTime)
+  Sys.sleep(1)
+  dev.off()
+}
+
+image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Density/"
+
+# DENSITY CURVE - AGE
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_age_by_", i, "_density.jpeg"))
+  hist(temp$age, mean(temp$age), prob=T, main =  paste("Density: Men's Age: ", i, sep=" "))
+  lines(density(temp$age))
+  Sys.sleep(1)
+  dev.off()
+}
+
+# DENSITY CURVE - RUNTIME
+for (i in seq(from=1999, to=2012, by=1)){
+  temp <- filter(cbMen, year == i)
+  jpeg(paste(image_location, "mens_runtime_by_", i, "_density.jpeg"))
+  hist(temp$runTime, mean(temp$runTime), prob=T, main =  paste("Density: Men's runTime: ", i, sep=" "))
+  lines(density(temp$runTime))
+  Sys.sleep(1)
+  dev.off()
+}
+
+dev.set(dev.next())
+temp <- filter(cbMen, year == 1999)
+hist(temp$age, 20, prob=T)
+lines(density(temp$age))
+```
+
+```{r}
+#URL for WOMEN and Library
+
+library(XML)
+ubase = "http://www.cherryblossom.org/"
+
+#### Revised URLS
+womenURLs = 
+  c("results/1999/cb99f.html", #"cb99f.htm"
+    "results/2000/Cb003f.htm", #"cb003f.htm"
+    "results/2001/oof_f.html", #"results/2001/oof_f.html"
+    "results/2002/ooff.htm", #"results/2002/ooff.htm"
+    "results/2003/CB03-F.HTM", #"results/2003/CB03-F.HTM"
+    "results/2004/women.htm", #"results/2004/women.htm"
+    "results/2005/CB05-F.htm", #"results/2005/CB05-F.htm"
+    "results/2006/women.htm", #"results/2006/women.htm"
+    "results/2007/women.htm", #"results/2007/women.htm"
+    "results/2008/women.htm", #"results/2008/women.htm"
+    "results/2009/09cucb-F.htm", #"results/2009/09cucb-F.htm"
+    "results/2010/2010cucb10m-f.htm", #"results/2010/2010cucb10m-f.htm"
+    "results/2011/2011cucb10m-f.htm", #"results/2011/2011cucb10m-f.htm"
+    "results/2012/2012cucb10m-f.htm" #"results/2012/2012cucb10m-f.htm"
+    )
+####
+
+
+#### women URLS
+urlsV3 = paste(ubase, womenURLs, sep="")
+urlsV3[1:4]
+
+urlsV3[1]
+
+```
+
+```{r}
+
+womenTables = lapply(urlsV3, extractResTableV3)
+
+#womenTables[[3]][1:3] = mensTables[[3]][1:3]
+#womenTables[[3]] = append(x=womenTables[[3]], values=mensTables[[3]][4:5], after = 3)
+
+years1 = 1999:2012
+
+
+
+womenTablesv2 <- mapply(extractResTableV3, url = urlsV3, year = years1)
+names(womenTablesv2) = years1
+sapply(womenTablesv2, length)
+
+###womenTablesv2[[1]][1:10]
+###womenTablesv2[[2]][1:10]
+###womenTablesv2[[3]][1:10]
+###womenTablesv2[[4]][1:10]
+###womenTablesv2[[5]][1:10]
+###womenTablesv2[[6]][1:10]
+###womenTablesv2[[7]][1:10]
+###womenTablesv2[[8]][1:10]
+
+save(womenTablesv2, file = "CBWoMenTextTables_Houssaye.rda")
+```
+
+```{r fix2001Women}
+womenTablesv2[["2001"]][1:3] <- menTablesV2[["2001"]][1:3]
+womenTablesv2[["2001"]] <- append(x=womenTablesv2[["2001"]], values=menTablesV2[["2001"]][4:5], after = 3)
+```
+
+```{r parseWomenData}
+separatorIdxWomen = grep("^===", womenTablesv2[["2006"]])
+separatorRowWomen = womenTablesv2[['2006']][separatorIdxWomen]
+separatorRowXWomen = paste(substring(separatorRowWomen, 1, 63), " ", 
+                      substring(separatorRowWomen, 65, nchar(separatorRowWomen)), 
+                      sep = "")
+womenTablesv2[['2006']][separatorIdxWomen] = separatorRowXWomen
+
+womenResMat = sapply(womenTablesv2, extractVariables)
+womenDF = mapply(createDF, womenResMat, year = 1999:2012,
+               sex = rep("F", 14), SIMPLIFY = FALSE)
+sapply(womenDF, nrow)
+sapply(womenDF, nrow)
+cbWomen = do.call(rbind, womenDF)
+```
+```{r writeWomenCSV}
+# READ-WRITE CSV
+cbWomen_path <- "../7333-Case-Study-Two/cbWomen.csv"
+
+read_or_write = "read"
+
+if (read_or_write == 'read'){
+  
+  cbWomen <- read_csv(cbWomen_path, col_names = TRUE,
+                    col_types = cols(year =
+                                     col_double(),
+                                     sex = col_character(),
+                                     name = col_character(),
+                                     home = col_character(),
+                                     age = col_double(),
+                                     runTime = col_double()
+                                     )
+                    )
+  
+} else if(read_or_write == 'write'){
+  
+  write_csv(cbWomen, cbWomen_path)
+  }
+```
+
+```{r}
+
+#2001 table rows 1-10
+##2001 Women's table has no "===" row and no variable names.  need to include those elements in for 2001.
+
+library(dplyr)
+library(tidyr)
+#install.packages("splitstackshape")
+library(splitstackshape)
+library(stringr)
+library(stringi)
+
+varNamesv2 <- c("Place", "Num Name","Ag Hometown", "Net Gun")
+
+####stri_length(womenTablesv2[[3]])
+####womenTablesv2[[3]] <- womenTablesv2[[3]][3:2976]
+####womenTablesv2[[3]][1:10]
+####womenTablesv2[[3]] <- paste(womenTablesv2[[3]],varNamesv2,sep = " ")
+####womenTablesv2[[3]][1:10]
+
+Women03 = as.data.frame(womenTablesv2[[3]])
+colnames(Women03) <- c("column")
+women03v2 <- concat.split(Women03,"column","     ")
+women03v3 <- women03v2[,-1]
+women03v4 <- women03v3[-(1:3),]
+colnames(women03v4) <- c("Place", "Num Name","Ag Hometown", "Net","Gun")
+women03v4[1:10,]
+
+
+```
+
+
+
+
+
+
+
+
+
+##women03v3 <- as.data.frame(paste(women03v2[3],women03v2[4]))
+
+
+col_women03 <- c("PLACE","NUM","AG","HOMETOWN","NET","GUN")
+
+
+
+womenResMat = lapply(womenTablesv2, extractVariables)
+
+
+
+```
+
+
+woIndex = grep("^    ", womenTablesv2[["2001"]])
+woIndex
+
+wspacerrow <- womenTablesv2[["2001"]][woIndex]
+wheaderrow <- womenTablesv2[["2001"]][woIndex]
+varNames <- c("Place", "Div/Tot", "Num", "Name", "Ag", "Hometown", "Net Tim", "Gun Tim", "Pace", "S")
+str_replace(wheaderrow,"     ",varNames)
+womenTablesv2[["2001"]][1:10]
+
+separatorIdx1 = grep("^===", womenTablesv2[["2001"]])
+separatorRow1 = womenTablesv2[['2001']][separatorIdx]
+separatorRowX1 = paste(substring(separatorIdx1, 1, 63), " ", sep = "") 
+
+separatorIdx = grep("^===", menTablesV2[["2001"]])
+separatorRow = menTablesV2[['2006']][separatorIdx]
+separatorRowX = paste(substring(separatorRow, 1, 63), " ", 
+                      substring(separatorRow, 65, nchar(separatorRow)), 
+                      sep = "")
+menTablesV2[['2006']][separatorIdx] = separatorRowX
+
+
+Women03 <- as.data.frame(womenTablesv2[[3]])
+colnames(Women03) <- c("column")
+women03v2 <- concat.split(Women03,"column","     ")
+women03v3 <- (women03v2[,-1:-3])
+women03v4 <- paste[women033,4]
+
+menTablesV2[[3]][1:10]
+mens2003col <- menTablesV2[[3]][3:4,]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Disregard following code:  attacked it from first try to sepearte into DFs and then recombine.  easier to use function provided.
+
+#1.  Seperate Years into individual DF.
+
+
+
+m1999 = as.data.frame(menResMat[[1]])
+m2000 = as.data.frame(menResMat[[2]])
+m2001 = as.data.frame(menResMat[[3]])
+m2002 = as.data.frame(menResMat[[4]])
+m2003 = as.data.frame(menResMat[[5]])
+m2004 = as.data.frame(menResMat[[6]])
+m2005 = as.data.frame(menResMat[[7]])
+m2006 = as.data.frame(menResMat[[8]])
+m2007 = as.data.frame(menResMat[[9]])
+m2008 = as.data.frame(menResMat[[10]])
+m2009 = as.data.frame(menResMat[[11]])
+m2010 = as.data.frame(menResMat[[12]])
+m2011 = as.data.frame(menResMat[[13]])
+m2012 = as.data.frame(menResMat[[14]])
+
+#2.  Create new variable for year
+
+m1999$newcolumn = 1999
+m2000$newcolumn = 2000
+m2001$newcolumn = 2001
+m2002$newcolumn = 2002
+m2003$newcolumn = 2003
+m2004$newcolumn = 2004
+m2005$newcolumn = 2005
+m2006$newcolumn = 2006
+m2007$newcolumn = 2007
+m2008$newcolumn = 2008
+m2009$newcolumn = 2009
+m2010$newcolumn = 2010
+m2011$newcolumn = 2011
+m2012$newcolumn = 2012
+
+## do not do this step unless you accidentally created an extra column for 1999 file
+
+m1999 <- m1999[ -c(8)]
+
+names(m1999)[7] <- "Year"
+names(m2000)[7] <- "Year"
+names(m2001)[7] <- "Year"
+names(m2002)[7] <- "Year"
+names(m2003)[7] <- "Year"
+names(m2004)[7] <- "Year"
+names(m2005)[7] <- "Year"
+names(m2006)[7] <- "Year"
+names(m2007)[7] <- "Year"
+names(m2008)[7] <- "Year"
+names(m2009)[7] <- "Year"
+names(m2010)[7] <- "Year"
+names(m2011)[7] <- "Year"
+names(m2012)[7] <- "Year"
+
+
+MENSDF <- rbind(m1999,m2000,m2001,m2002,m2003,m2004,m2005,m2006,m2007,m2008,m2009,m2010,m2011,m2012)
+MENSDF <- as.numeric(MENSDF$ag)
+
+
+
+boxplot(MENSDF$ag ~ MENSDF$Year, data = MENSDF)
+
+
+
+
+
