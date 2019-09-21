@@ -315,7 +315,7 @@ for (i in seq(from=1999, to=2012, by=1)){
 }
 
 
-# QQ PLOT: RUNTIME
+# QQ PLOT: MEN'S RUNTIME
 par("mar")
 par(mar=c(1,1,1,1))
 par(mfrow=c(1,1))
@@ -323,7 +323,7 @@ jpeg(paste(image_location, "mens_runtime_qq_plot.jpeg"))
 qqnorm(cbMen$runTime, main = "Q-Q Plot: Men's runTime")
 qqline(cbMen$runTime)
 
-# QQ PLOT: RUNTIME BY YEAR
+# QQ PLOT: MEN'S RUNTIME BY YEAR
 par("mar")
 par(mar=c(1,1,1,1))
 
@@ -340,7 +340,7 @@ for (i in seq(from=1999, to=2012, by=1)){
 
 image_location = "C:/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/Images/Density/"
 
-# DENSITY CURVE - AGE
+# DENSITY CURVE - MEN'S AGE BY YEAR
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
   jpeg(paste(image_location, "mens_age_by_", i, "_density.jpeg"))
@@ -350,7 +350,7 @@ for (i in seq(from=1999, to=2012, by=1)){
   dev.off()
 }
 
-# DENSITY CURVE - RUNTIME
+# DENSITY CURVE - MEN'S RUNTIME BY YEAR
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
   jpeg(paste(image_location, "mens_runtime_by_", i, "_density.jpeg"))
@@ -359,6 +359,26 @@ for (i in seq(from=1999, to=2012, by=1)){
   Sys.sleep(1)
   dev.off()
 }
+
+# DENSITY CURVE - MEN'S RUNTIME OVERLAY AGE
+for (i in seq(from=1999, to=2012, by=1)){
+  
+  temp <- filter(cbMen, year == i)
+  xrng = range(temp$age, temp$runTime)
+  age = density(temp$age, from = xrng[1L], to = xrng[2L])
+  runtime = density(temp$runTime, from = xrng[1L], to = xrng[2L])
+  
+  matplot(age$x, cbind(age$y, runtime$y), 
+          main = paste("Denisty Plot: Men's Age vs Runtime:",
+                       i, sep=" "),
+          xlab="Age and RunTime",
+          ylab="Density"
+          
+  )
+}
+
+
+
 
 dev.set(dev.next())
 temp <- filter(cbMen, year == 1999)
