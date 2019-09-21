@@ -545,6 +545,15 @@ sapply(womenDF, nrow)
 sapply(womenDF, nrow)
 cbWomen = do.call(rbind, womenDF)
 ```
+```{r removeWomenNA}
+womenDF$`1999` = womenDF$`1999`[-which(is.na(womenDF$`1999`$age)),]
+womenDF$`2002` = womenDF$`2002`[-which(is.na(womenDF$`2002`$age)),]
+womenDF$`2005` = womenDF$`2005`[-which(is.na(womenDF$`2005`$age)),]
+womenDF$`2006` = womenDF$`2006`[-which(is.na(womenDF$`2006`$age)),]
+womenDF$`2007` = womenDF$`2007`[-which(is.na(womenDF$`2007`$age)),]
+womenDF$`2009` = womenDF$`2009`[-which(is.na(womenDF$`2009`$age)),]
+```
+
 ```{r writeWomenCSV}
 # READ-WRITE CSV
 cbWomen_path <- "../7333-Case-Study-Two/cbWomen.csv"
