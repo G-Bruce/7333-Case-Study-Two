@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r setup}
 #URL for MEN and Library
 
 library(XML)
@@ -48,7 +48,7 @@ urlsV2[1:4]
 
 ```
 
-```{r}
+```{r utilityFunctions}
 
 #FUNCTIONS
 
@@ -241,13 +241,13 @@ createDF = function(Res, year, sex)
 ```
 
 
-```{r}
+```{r notNeeded}
 
 urlsV2[1]
 ```
 
 
-```{r}
+```{r retrieveMenData}
 years = 1999:2012
 
 ###Correct function for 1999 normalization
@@ -275,7 +275,7 @@ save(menTablesV2, file = "CBMenTextTables_Houssaye.rda")
 
 
 
-```{r}
+```{r cleanseMenData}
 
 
 separatorIdx = grep("^===", menTablesV2[["2006"]])
@@ -292,7 +292,7 @@ menTablesV2[['2006']][separatorIdx] = separatorRowX
 
 
 
-```{r}
+```{r createMenMatrix}
 
 
 
@@ -303,7 +303,7 @@ menResMat = lapply(menTablesV2, extractVariables)
 
 ```
 
-```{r}
+```{r createMenDF}
 menDF = mapply(createDF, menResMat, year = 1999:2012,
                sex = rep("M", 14), SIMPLIFY = FALSE)
 sapply(menDF, nrow)
@@ -326,7 +326,7 @@ cbMen = do.call(rbind, menDF)
 ```{r Testcode}
 
 # READ-WRITE CSV
-cbMen_path <- "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/cbMen.csv"
+cbMen_path <- "../7333-Case-Study-Two/cbMen.csv"
 
 read_or_write = "read"
 
@@ -343,7 +343,7 @@ if (read_or_write == 'read'){
                                      )
                     )
   
-} else if(read_cbMen == 'write'){
+} else if(read_or_write == 'write'){
   
   write_csv(cbMen, cbMen_path)
   }
@@ -358,7 +358,7 @@ cbMen <- filter(cbMen, !(year==2001 & runTime == min(runTime) & age == 70))
 
 # RECORD COUNT: 70046
 # BOXPLOT: runTime by Year
-image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Boxplot/"
+image_location = "../7333-Case-Study-Two/Images/Boxplot/"
 par(mfrow=c(1,1))
 jpeg(paste(image_location, "mens_runTime_by_Year.jpeg"))
 boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)")
@@ -378,7 +378,7 @@ jpeg(paste(image_location, "mens_age_by_Year.jpeg"))
 boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
 dev.off()
 
-image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/QQ_Plot/"
+image_location = "../7333-Case-Study-Two/Images/QQ_Plot/"
 
 # QQ PLOT: AGE
 par(mfrow=c(1,1))
@@ -436,7 +436,7 @@ for (i in seq(from=1999, to=2012, by=1)){
   dev.off()
 }
 
-image_location = "C:/Users/brndn/OneDrive/Documents/GitHub/Homework3/7333-Case-Study-Two/Images/Density/"
+image_location = "../7333-Case-Study-Two/Images/Density/"
 
 # DENSITY CURVE - AGE
 for (i in seq(from=1999, to=2012, by=1)){
@@ -464,7 +464,7 @@ hist(temp$age, 20, prob=T)
 lines(density(temp$age))
 ```
 
-```{r}
+```{r womenSetup}
 #URL for WOMEN and Library
 
 library(XML)
@@ -498,7 +498,7 @@ urlsV3[1]
 
 ```
 
-```{r}
+```{r retrieveWomenData}
 
 womenTables = lapply(urlsV3, extractResTableV3)
 
@@ -579,33 +579,33 @@ if (read_or_write == 'read'){
   }
 ```
 
-```{r}
+```{r notNeeded2}
 
-#2001 table rows 1-10
-##2001 Women's table has no "===" row and no variable names.  need to include those elements in for 2001.
-
-library(dplyr)
-library(tidyr)
-#install.packages("splitstackshape")
-library(splitstackshape)
-library(stringr)
-library(stringi)
-
-varNamesv2 <- c("Place", "Num Name","Ag Hometown", "Net Gun")
-
-####stri_length(womenTablesv2[[3]])
-####womenTablesv2[[3]] <- womenTablesv2[[3]][3:2976]
-####womenTablesv2[[3]][1:10]
-####womenTablesv2[[3]] <- paste(womenTablesv2[[3]],varNamesv2,sep = " ")
-####womenTablesv2[[3]][1:10]
-
-Women03 = as.data.frame(womenTablesv2[[3]])
-colnames(Women03) <- c("column")
-women03v2 <- concat.split(Women03,"column","     ")
-women03v3 <- women03v2[,-1]
-women03v4 <- women03v3[-(1:3),]
-colnames(women03v4) <- c("Place", "Num Name","Ag Hometown", "Net","Gun")
-women03v4[1:10,]
+# #2001 table rows 1-10
+# ##2001 Women's table has no "===" row and no variable names.  need to include those elements in for 2001.
+# 
+# library(dplyr)
+# library(tidyr)
+# #install.packages("splitstackshape")
+# library(splitstackshape)
+# library(stringr)
+# library(stringi)
+# 
+# varNamesv2 <- c("Place", "Num Name","Ag Hometown", "Net Gun")
+# 
+# ####stri_length(womenTablesv2[[3]])
+# ####womenTablesv2[[3]] <- womenTablesv2[[3]][3:2976]
+# ####womenTablesv2[[3]][1:10]
+# ####womenTablesv2[[3]] <- paste(womenTablesv2[[3]],varNamesv2,sep = " ")
+# ####womenTablesv2[[3]][1:10]
+# 
+# Women03 = as.data.frame(womenTablesv2[[3]])
+# colnames(Women03) <- c("column")
+# women03v2 <- concat.split(Women03,"column","     ")
+# women03v3 <- women03v2[,-1]
+# women03v4 <- women03v3[-(1:3),]
+# colnames(women03v4) <- c("Place", "Num Name","Ag Hometown", "Net","Gun")
+# women03v4[1:10,]
 
 
 ```
