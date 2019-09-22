@@ -1,6 +1,6 @@
 ---
 title: "Quantifying_casestudy4"
-author: "Brandon"
+author: " De La Houssaye, Brandon; Granger, Bruce Serna, Daniel; Brandon"
 date: "September 14, 2019"
 output: html_document
 ---
@@ -273,8 +273,6 @@ save(menTablesV2, file = "CBMenTextTables_Houssaye.rda")
 ```
 
 
-
-
 ```{r cleanseMenData}
 
 
@@ -289,7 +287,6 @@ menTablesV2[['2006']][separatorIdx] = separatorRowX
 
 
 ```
-
 
 
 ```{r createMenMatrix}
@@ -323,18 +320,21 @@ cbMen = do.call(rbind, menDF)
 
 
 ```
-```{r Testcode}
+
+```{r Injest-WriteCSV}
+library(tidyverse)
+
 
 # READ-WRITE CSV
-cbMen_path <- "../7333-Case-Study-Two/cbMen.csv"
+csv_path <- "/Users/bgranger/Documents/SMU/7333_Quantifying_The_World/Unit_4/Unit_4_Repo/7333-Case-Study-Two/"
 
 read_or_write = "read"
 
 if (read_or_write == 'read'){
   
-  cbMen <- read_csv(cbMen_path, col_names = TRUE,
-                    col_types = cols(year =
-                                     col_double(),
+  cbMen <- read_csv(paste(csv_path, "cbMen.csv", sep=""), 
+                    col_names = TRUE,
+                    col_types = cols(year = col_double(),
                                      sex = col_character(),
                                      name = col_character(),
                                      home = col_character(),
@@ -343,62 +343,91 @@ if (read_or_write == 'read'){
                                      )
                     )
   
+    cbWomen <- read_csv(paste(csv_path, "cbWomen.csv", sep=""),
+                        col_names = TRUE,
+                        col_types = cols(year = col_double(),
+                                         sex = col_character(),
+                                         name = col_character(),
+                                         home = col_character(),
+                                         age = col_double(),
+                                         runTime = col_double()
+                                         )
+                        )
+  
 } else if(read_or_write == 'write'){
   
-  write_csv(cbMen, cbMen_path)
-  }
+  write_csv(cbMen, paste(csv_path, "cbMen.csv"))
+  write_csv(cbWomen, paste(csv_path, "cbWomen.csv"))
+  
+  
+}
 
 
 
-# RECORD COUNT: 70047
-boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)") 
+```
+
+```{r ProcessCSVs}
+
+# MEN --------------------------------------------------------
+
+# MEN STARTING RECORD COUNT 70047
 
 # DROP THE ERROR FROM THE DATASET
 cbMen <- filter(cbMen, !(year==2001 & runTime == min(runTime) & age == 70))
 
-# RECORD COUNT: 70046
-# BOXPLOT: runTime by Year
+# MEN RECORD COUNT: 70046
+# LOCATE AND REMOVE AGE OUTLIERS
+cbMen <- filter(cbMen, !(year %in% c(2001:2003) & age %in% c(0,1, 2, 4)))
+
+# MEN FINAL RECORD COUNT: 70039
+
+# WOMEN ------------------------------------------------------
+
+# WOMEN STARTING RECORD COUNT 75971
+# age = 55 name == "Loretta CUCE" & year == 2001
+
+filter(cbWomen, (year==2001 & runTime == min(runTime)))
+
+```
+
+```{r ProducePlots}
+
+# BOXPLOTS ####
+
+# MENS ------------------------------------------------------
+# BOXPLOT: MENS runTime by Year
+
 image_location = "../7333-Case-Study-Two/Images/Boxplot/"
+
 par(mfrow=c(1,1))
 jpeg(paste(image_location, "mens_runTime_by_Year.jpeg"))
 boxplot(runTime~year,data=cbMen, main="Cherry Blossom: Men's Run Time By Year", xlab="Year", ylab="Time (Minutes)")
 dev.off()
 
-# BOXPLOT: AGE BY YEAR
-boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
 
-
-# LOCATE AND REMOVE AGE OUTLIERS
-cbMen <- filter(cbMen, !(year %in% c(2001:2003) & age %in% c(0,1, 2, 4)))
-
-# RECORD COUNT: 70039
-# BOXPLOT: Age by Year
+# BOXPLOT: MENS Age by Year
 par(mfrow=c(1,1))
 jpeg(paste(image_location, "mens_age_by_Year.jpeg"))
 boxplot(age~year,data=cbMen, main="Cherry Blossom: Men's Age by Year", xlab="Year", ylab="Runner's Age")
 dev.off()
 
+
+# WoMENS ------------------------------------------------------
+
+
+# QQ PLOTS ####
+
 image_location = "../7333-Case-Study-Two/Images/QQ_Plot/"
 
-# QQ PLOT: AGE
+# QQ PLOT: MENS AGE - ALL YEARS
 par(mfrow=c(1,1))
 jpeg(paste(image_location, "mens_age_qq_plot.jpeg"))
 qqnorm(cbMen$age, main = "Q-Q Plot: Men's Age")
 qqline(cbMen$age)
 dev.off()
 
-# QQ PLOT: AGE BY YEAR
-#par("mar")
-#par(mar=c(1,1,1,1))
-#jpeg(paste(image_location, "mens_age_by_year_qq_plot.jpeg"))
-#par(mfrow=c(8,2))
-#for (i in seq(from=1999, to=2012, by=1)){
-#  temp <- filter(cbMen, year == i)
 
-#  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
-#  qqline(temp$age)
-#}
-#dev.off()
+# QQ PLOT: MENS AGE - BY YEARS
 
 par(mar=c(1,1,1,1))
 
@@ -413,7 +442,7 @@ for (i in seq(from=1999, to=2012, by=1)){
 }
 
 
-# QQ PLOT: RUNTIME
+# QQ PLOT: MENS RUNTIME - ALL YEARS
 par("mar")
 par(mar=c(1,1,1,1))
 par(mfrow=c(1,1))
@@ -421,7 +450,7 @@ jpeg(paste(image_location, "mens_runtime_qq_plot.jpeg"))
 qqnorm(cbMen$runTime, main = "Q-Q Plot: Men's runTime")
 qqline(cbMen$runTime)
 
-# QQ PLOT: RUNTIME BY YEAR
+# QQ PLOT: MENS RUNTIME BY YEAR
 par("mar")
 par(mar=c(1,1,1,1))
 
@@ -436,9 +465,11 @@ for (i in seq(from=1999, to=2012, by=1)){
   dev.off()
 }
 
+# DENSITY PLOTS #### 
+
 image_location = "../7333-Case-Study-Two/Images/Density/"
 
-# DENSITY CURVE - AGE
+# DENSITY CURVE - MENS AGE BY YEAR
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
   jpeg(paste(image_location, "mens_age_by_", i, "_density.jpeg"))
@@ -448,7 +479,8 @@ for (i in seq(from=1999, to=2012, by=1)){
   dev.off()
 }
 
-# DENSITY CURVE - RUNTIME
+# DENSITY CURVE - MENS RUNTIME BY YEAR
+
 for (i in seq(from=1999, to=2012, by=1)){
   temp <- filter(cbMen, year == i)
   jpeg(paste(image_location, "mens_runtime_by_", i, "_density.jpeg"))
@@ -457,6 +489,37 @@ for (i in seq(from=1999, to=2012, by=1)){
   Sys.sleep(1)
   dev.off()
 }
+
+```
+
+
+```{r Testcode}
+
+
+par(mfrow=c(1,1))
+boxplot(age~year,data=cbWomen, main="Cherry Blossom: Women's Age By Year", xlab="Year", ylab="Age")
+
+
+
+# QQ PLOT: AGE BY YEAR
+#par("mar")
+#par(mar=c(1,1,1,1))
+#jpeg(paste(image_location, "mens_age_by_year_qq_plot.jpeg"))
+#par(mfrow=c(8,2))
+#for (i in seq(from=1999, to=2012, by=1)){
+#  temp <- filter(cbMen, year == i)
+
+#  qqnorm(temp$age, main = paste("Q-Q Plot: Men's Age: ", i, sep=" "))
+#  qqline(temp$age)
+#}
+#dev.off()
+
+
+
+
+
+
+
 
 dev.set(dev.next())
 temp <- filter(cbMen, year == 1999)
